@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSAKI 3 Safety Checks</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', 'Meiryo', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .logo {
+            max-width: 200px;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        h1.large {
+            font-size: 24px;
+        }
+
+        p {
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            font-size: 20px;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        video {
+            width: 100%;
+            max-height: 500px;
+            border-radius: 8px;
+        }
+
+        .video-controls {
+            margin-top: 20px;
+        }
+
+        .quiz-container {
+            text-align: left;
+        }
+
+        .question {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .question-text {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .question-number {
+            color: #667eea;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .option {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .option.selected {
+            border-color: #667eea;
+            background: #e8eeff;
+        }
+
+        .option.correct {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .option.incorrect {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .result-message {
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .result-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+
+        .result-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #dc3545;
+        }
+
+        .completion-img {
+            max-width: 300px;
+            margin: 30px auto;
+            display: block;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #667eea;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 言語選択画面 -->
+        <div id="languageSelection" class="page">
+            <img src="Logo.png" alt="OSAKI Logo" class="logo">
+            <h1>Multilingual 3 Safety Checks</h1>
+            <h1 class="large">Please select a language.</h1>
+            <button class="btn" onclick="selectLanguage('id')">Bahasa Indonesia</button>
+            <button class="btn" onclick="selectLanguage('vn')">Tiếng Việt</button>
+        </div>
+
+        <!-- イントロ画面 -->
+        <div id="intro" class="page hidden">
+            <img src="Logo.png" alt="OSAKI Logo" class="logo">
+            <h1>Multilingual 3 Safety Checks</h1>
+            <p id="introText"></p>
+            <button class="btn" onclick="startVideo()">
+                <span id="watchBtn"></span>
+            </button>
+        </div>
+
+        <!-- ビデオ画面 -->
+        <div id="videoPage" class="page hidden">
+            <h1>OSAKI 3 Safety Checks</h1>
+            <div class="video-container">
+                <video id="trainingVideo" controls controlsList="nodownload">
+                    <source id="videoSource" src="" type="video/mp4">
+                </video>
+            </div>
+            <div class="video-controls">
+                <button class="btn" id="nextToQuiz" onclick="startQuiz()" disabled></button>
+            </div>
+        </div>
+
+        <!-- クイズ画面 -->
+        <div id="quizPage" class="page hidden">
+            <h1>Quiz</h1>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div id="quizContainer" class="quiz-container"></div>
+            <button class="btn" id="submitBtn" onclick="submitAnswer()">回答する</button>
+            <div id="resultMessage" class="result-message hidden"></div>
+        </div>
+
+        <!-- 完了画面 -->
+        <div id="completionPage" class="page hidden">
+            <h1 id="completionTitle"></h1>
+            <img src="cr.png" alt="Completion" class="completion-img">
+            <button class="btn" onclick="location.reload()">最初に戻る</button>
+        </div>
+    </div>
+
+    <script>
+        let selectedLanguage = '';
+        let quizData = [];
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let selectedAnswer = null;
+        let correctAnswers = 0;
+
+        const texts = {
+            id: {
+                intro: 'Ini adalah video pelatihan keselamatan OSAKI Construction.<br>Setelah video, akan ada 5 soal kuis untuk mengecek pemahaman Anda.',
+                watchBtn: 'Tonton video',
+                nextToQuiz: 'Lanjut ke Kuis',
+                questionNumber: 'Pertanyaan',
+                selectOption: 'Silakan pilih jawaban.',
+                correct: 'Benar!',
+                incorrect: 'Salah.',
+                retryTitle: '5 jawaban benar diperlukan.',
+                retryScore: 'Skor',
+                retryMessage: 'Silakan coba lagi.',
+                submitBtn: 'Kirim Jawaban',
+                completion: 'Selesai',
+                backToStart: 'Kembali ke Awal'
+            },
+            vn: {
+                intro: 'Đây là video đào tạo an toàn Của OSAKI Construction.<br>Sau video, sẽ có 5 câu hỏi để kiểm tra mức độ hiểu bài.',
+                watchBtn: 'Xem video',
+                nextToQuiz: 'Tiếp tục Quiz',
+                questionNumber: 'Câu hỏi',
+                selectOption: 'Vui lòng chọn câu trả lời.',
+                correct: 'Đúng!',
+                incorrect: 'Sai.',
+                retryTitle: 'Cần trả lời đúng tất cả 5 câu.',
+                retryScore: 'Điểm',
+                retryMessage: 'Vui lòng thử lại.',
+                submitBtn: 'Gửi Câu Trả Lời',
+                completion: 'Kết thúc',
+                backToStart: 'Quay Lại Đầu'
+            }
+        };
+
+        const quizDatabase = {
+            id: [
+                {q: 'Dalam kegiatan "3 Safety Checks" di OSAKI Construction, terdapat "Report a near miss", "Individual Hazard Prediction", dan "A". Pilih satu yang termasuk dalam "A".', o: ['Senyum dan rasa terima kasih', 'Samurai dan kucing', 'Pointing and Calling', 'Gempa bumi dan petir'], a: 2},
+                {q: 'Kegiatan keselamatan "3 Safety Checks" di OSAKI Construction terdiri dari berapa item?', o: ['3', '4', '5', '6'], a: 0},
+                {q: 'Untuk melaksanakan "Report a near miss", apa yang digunakan?', o: ['Sinyal', 'Kue (cookie)', 'Sepatu keselamatan', 'Aplikasi "ヒヤリポ"(Hiyaripo)'], a: 3},
+                {q: 'Dalam "Individual Hazard Prediction", metode apa yang digunakan?', o: ['Metode "2 Putaran"', 'Metode "1 Putaran"', 'Pemeriksaan ulang', 'Penilaian risiko'], a: 0},
+                {q: 'Dalam "Pointing and Calling", metode apa yang digunakan?', o: ['Metode "Bukti"', 'Metode "Verifikasi"', 'Metode "Attest"', 'Metode "Persetujuan"'], a: 2},
+                {q: 'Kampanye "Report a near miss" bertujuan untuk mencegah apa?', o: ['Kecelakaan', 'Penyakit', 'Gangguan sistem', 'Kerusakan lingkungan'], a: 0},
+                {q: 'Manakah yang termasuk dalam kategori prediksi risiko pada aktivitas "Individual Hazard Prediction" dengan metode 2 putaran?', o: ['Benda di tempat tinggi akan "terbakar"', 'Benda yang berputar akan "terpental"', 'Benda bulat akan "menggelinding"', 'Benda yang berdiri akan "memanjang"'], a: 2},
+                {q: 'Manakah yang termasuk dalam kategori prediksi risiko pada aktivitas "Individual Hazard Prediction" dengan metode 2 putaran?', o: ['Benda yang berada di tempat tinggi akan "jatuh"', 'Benda yang digantung akan "menabrak"', 'Benda yang berbentuk bulat akan "tertekan"', 'Benda yang berdiri akan "memanjang"'], a: 0},
+                {q: 'Manakah yang termasuk dalam kategori prediksi risiko pada aktivitas "Individual Hazard Prediction" dengan metode 2 putaran?', o: ['Benda yang berbentuk bulat akan "tertekan"', 'Benda yang digantung akan "jatuh"', 'Benda yang bergerak akan "dipukul"', 'Benda yang berputar akan "terpental"'], a: 1},
+                {q: 'Manakah yang termasuk dalam kategori prediksi risiko pada aktivitas "Individual Hazard Prediction" dengan metode 2 putaran?', o: ['Benda yang berbentuk bulat akan "tertekan"', 'Benda yang digantung akan "menabrak"', 'Benda yang berdiri akan "memanjang"', 'Benda yang bergerak akan "terjepit"'], a: 3},
+                {q: 'Manakah yang termasuk dalam kategori prediksi risiko pada aktivitas "Individual Hazard Prediction" dengan metode 2 putaran?', o: ['Benda yang berbentuk bulat akan "tertekan"', 'Benda yang berdiri akan "roboh"', 'Benda yang digantung akan "menabrak"', 'Benda yang berputar akan "terpental"'], a: 1},
+                {q: 'Dari item berikut, manakah yang termasuk dalam kegiatan "4 Naika + 1" perusahaan kami?', o: ['Apakah bisa terjadi kebakaran atau ledakan?', 'Apakah bisa menyebabkan luka bakar?', 'Apakah bisa jatuh?', 'Apakah bisa tersengat listrik?'], a: 2},
+                {q: 'Dalam kampanye "4 Naika + 1" perusahaan kami, apa yang dimaksud dengan "+1"?', o: ['Apakah bisa bergerak?', 'Apakah bisa tumbang.', 'Apakah bisa terpotong?', 'Apakah bisa terpeleset?'], a: 3},
+                {q: 'Dari item berikut, manakah yang termasuk dalam kegiatan "4 Naika + 1" perusahaan kami?', o: ['Apakah bisa bergerak?', 'Apakah bisa kekurangan oksigen?', 'Apakah bisa terkena sengatan panas?', 'Apakah bisa terjadi kebakaran atau ledakan?'], a: 0},
+                {q: 'Dari item berikut, manakah yang termasuk dalam kegiatan "4 Naika + 1" perusahaan kami?', o: ['Apakah bisa kekurangan oksigen?', 'Apakah bisa tumbang.', 'Apakah bisa tertiup angin?', 'Apakah bisa menyebabkan luka bakar?'], a: 1},
+                {q: 'Pertanyaan tentang video\nBahaya "Tumbang"\nTindakan pencegahan apa yang disebutkan?', o: ['Jangan Sandarkan', 'Dilarang masuk', 'Batasi area terlarang', 'Letakkan di lantai'], a: 0},
+                {q: 'Pertanyaan tentang video\nBahaya "Berguling"\nTindakan pencegahan apa yang disebutkan?', o: ['Dilarang masuk', 'Letakkan di lantai', 'Jangan Sandarkan', 'Ikat beban dengan kuat'], a: 3},
+                {q: 'Pertanyaan tentang video\nBahaya "Terjepit"\nTindakan pencegahan apa yang disebutkan?', o: ['Batasi area terlarang', 'Letakkan di lantai', 'Jangan Sandarkan', 'Dilarang masuk'], a: 0},
+                {q: 'Saat melakukan "Pointing and Calling", perintah apa yang diteriakkan?', o: ['Koshi !', 'Mochi !', 'Yoshi !', 'Hashi !'], a: 2},
+                {q: 'Di antara karyawan OSAKI Construction, siapa yang wajib melakukan "3 Safety Checks"?', o: ['Semua staf (wajib)', 'Staf sementara', 'Pengawas lokasi', 'Manajer kerja'], a: 0}
+            ],
+            vn: [
+                {q: '"3 Safety Checks" tại Công ty OSAKI Construction gồm "Report a near miss", "Individual Hazard Prediction" và mục nào nữa?', o: ['Smile and Gratitude', 'Samurai và Mèo', 'Pointing and Calling', 'Động đất và sét'], a: 2},
+                {q: 'Hoạt động an toàn "3 Safety Checks" tại Công ty OSAKI Construction có mấy mục?', o: ['3', '4', '5', '6'], a: 0},
+                {q: '"Report a near miss" sử dụng gì để thực hiện?', o: ['Tín hiệu', 'Cuộc hội thoại', 'Bảng thông báo', 'Ứng dụng "ヒヤリポ"(hiyaripo)'], a: 3},
+                {q: '"Individual Hazard Prediction" được thực hiện theo phương pháp nào?', o: ['phương pháp "2 vòng"', 'phương pháp "1 vòng"', 'Kiểm tra lại', 'Đánh giá rủi ro'], a: 0},
+                {q: '"Pointing and Calling" được thực hiện theo phương pháp nào?', o: ['Phương pháp "chứng cứ"', 'Phương pháp "xác minh"', 'Phương pháp "Attest"', 'Phương pháp "Đồng ý"'], a: 2},
+                {q: 'Hoạt động "Report a near miss" nhằm mục đích ngăn ngừa điều gì?', o: ['Tai nạn', 'Bệnh', 'Lỗi hệ thống', 'Sự tàn phá môi trường'], a: 0},
+                {q: 'Trong các nội dung sau, nội dung nào thuộc 6 mục dự đoán nguy hiểm của hoạt động "Individual Hazard Prediction" theo phương pháp 2 vòng?', o: ['Vật ở nơi cao thì "cháy"', 'Vật đang quay thì "bị hất văng"', 'Vật tròn thì "lăn"', 'Vật đang đứng thì "dài ra"'], a: 2},
+                {q: 'Trong các nội dung sau, nội dung nào thuộc 6 mục dự đoán nguy hiểm của hoạt động "Individual Hazard Prediction" theo phương pháp 2 vòng?', o: ['Vật ở nơi cao thì "rơi"', 'Vật đang chuyển động thì "bị đánh"', 'Vật tròn thì "bị nghiền"', 'Vật đang đứng thì "dài ra"'], a: 0},
+                {q: 'Trong các nội dung sau, nội dung nào thuộc 6 mục dự đoán nguy hiểm của hoạt động "Individual Hazard Prediction" theo phương pháp 2 vòng?', o: ['Vật tròn thì "bị nghiền"', 'Vật đang được treo thì "rơi"', 'Vật đang chuyển động thì "bị đánh"', 'Vật đang quay thì "bị hất văng"'], a: 1},
+                {q: 'Trong các nội dung sau, nội dung nào thuộc 6 mục dự đoán nguy hiểm của hoạt động "Individual Hazard Prediction" theo phương pháp 2 vòng?', o: ['Vật tròn thì "bị nghiền"', 'Vật ở nơi cao thì "cháy"', 'Vật đang đứng thì "dài ra"', 'Vật đang chuyển động thì "bị kẹp"'], a: 3},
+                {q: 'Trong các nội dung sau, nội dung nào thuộc 6 mục dự đoán nguy hiểm của hoạt động "Individual Hazard Prediction" theo phương pháp 2 vòng?', o: ['Vật tròn thì "bị nghiền"', 'Vật đang đứng thì "đổ"', 'Vật đang chuyển động thì "bị đánh"', 'Vật đang quay thì "bị hất văng"'], a: 1},
+                {q: 'Trong các nội dung sau, nội dung nào thuộc Hoạt động "4 Naika + 1" của công ty?', o: ['Có nguy cơ cháy nổ không?', 'Có nguy cơ bị bỏng không?', 'Có nguy cơ rơi không?', 'Có nguy cơ bị điện giật không?'], a: 2},
+                {q: 'Trong Hoạt động "4 Naika + 1" của công ty, "+1" là nội dung nào?', o: ['Có nguy cơ chuyển động không?', 'Có nguy cơ bị đổ không?', 'Có nguy cơ bị cắt không?', 'Có nguy cơ bị trượt ngã không?'], a: 3},
+                {q: 'Trong các nội dung sau, nội dung nào thuộc Hoạt động "4 Naika + 1" của công ty?', o: ['Có nguy cơ chuyển động không?', 'Có nguy cơ thiếu oxy không?', 'Có nguy cơ bị say nắng không?', 'Có nguy cơ cháy nổ không?'], a: 0},
+                {q: 'Trong các nội dung sau, nội dung nào thuộc Hoạt động "4 Naika + 1" của công ty?', o: ['Có nguy cơ thiếu oxy không?', 'Có nguy cơ bị đổ không?', 'Có nguy cơ bị gió thổi bay không?', 'Có nguy cơ bị bỏng không?'], a: 1},
+                {q: 'Câu hỏi về video.\nNguy cơ "Rơi xuống"\nVí dụ về biện pháp xử lý được đề cập là gì?', o: ['Không dựa', 'Cấm vào', 'Phân khu', 'Buộc chặt'], a: 1},
+                {q: 'Câu hỏi về video.\nNguy cơ "Lăn"\nVí dụ về biện pháp xử lý được đề cập là gì?', o: ['Cấm vào', 'Đặt xuống sàn', 'Không dựa', 'Buộc chặt'], a: 3},
+                {q: 'Câu hỏi về video.\nNguy cơ "Bị kẹp"\nVí dụ về biện pháp xử lý được đề cập là gì?', o: ['Phân khu', 'Đặt xuống sàn', 'Không dựa', 'Cấm vào'], a: 0},
+                {q: 'Khi thực hiện hoạt động "Pointing and Calling", khẩu lệnh được hô là gì?', o: ['Koshi !', 'Mochi !', 'Yoshi !', 'Hashi !'], a: 2},
+                {q: 'Trong số người lao động của Công ty A, ai cần thực hiện hoạt động "3 Safety Checks"?', o: ['Tất cả mọi người (bắt buộc)', 'Nhân viên phái cử', 'Giám sát hiện trường', 'Người phụ trách công việc'], a: 0}
+            ]
+        };
+
+        function selectLanguage(lang) {
+            selectedLanguage = lang;
+            quizData = quizDatabase[lang];
+            
+            document.getElementById('languageSelection').classList.add('hidden');
+            document.getElementById('intro').classList.remove('hidden');
+            
+            document.getElementById('introText').innerHTML = texts[lang].intro;
+            document.getElementById('watchBtn').textContent = texts[lang].watchBtn;
+        }
+
+        function startVideo() {
+            document.getElementById('intro').classList.add('hidden');
+            document.getElementById('videoPage').classList.remove('hidden');
+            
+            const videoSource = selectedLanguage === 'id' ? 'DougaIN.mp4' : 'DougaBT.mp4';
+            document.getElementById('videoSource').src = videoSource;
+            
+            const video = document.getElementById('trainingVideo');
+            const nextBtn = document.getElementById('nextToQuiz');
+            
+            // ボタンのテキストを設定
+            nextBtn.textContent = texts[selectedLanguage].nextToQuiz;
+            
+            // 動画の状態をリセット
+            video.dataset.maxTime = 0;
+            nextBtn.disabled = true;
+            
+            video.load();
+            
+            // シークバーを無効化
+            video.addEventListener('seeking', function(e) {
+                if (video.currentTime < video.duration) {
+                    const playedTime = video.currentTime;
+                    const maxTime = parseFloat(video.dataset.maxTime) || 0;
+                    if (playedTime < maxTime) {
+                        video.currentTime = maxTime;
+                    }
+                }
+            });
+            
+            video.addEventListener('timeupdate', function() {
+                const maxTime = parseFloat(video.dataset.maxTime) || 0;
+                video.dataset.maxTime = Math.max(maxTime, video.currentTime);
+                
+                if (video.currentTime >= video.duration - 0.5) {
+                    nextBtn.disabled = false;
+                }
+            });
+        }
+
+        function startQuiz() {
+            document.getElementById('videoPage').classList.add('hidden');
+            document.getElementById('quizPage').classList.remove('hidden');
+            
+            // ランダムに5問選択
+            const shuffled = [...quizData].sort(() => Math.random() - 0.5);
+            currentQuestions = shuffled.slice(0, 5);
+            currentQuestionIndex = 0;
+            correctAnswers = 0;
+            
+            displayQuestion();
+        }
+
+        function displayQuestion() {
+            const question = currentQuestions[currentQuestionIndex];
+            const container = document.getElementById('quizContainer');
+            
+            selectedAnswer = null;
+            document.getElementById('resultMessage').classList.add('hidden');
+            document.getElementById('submitBtn').style.display = 'inline-block';
+            document.getElementById('submitBtn').textContent = texts[selectedLanguage].submitBtn;
+            
+            const progress = ((currentQuestionIndex) / 5) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            
+            let html = '<div class="question">';
+            html += `<div class="question-number">${texts[selectedLanguage].questionNumber} ${currentQuestionIndex + 1} / 5</div>`;
+            html += `<div class="question-text">${question.q.replace(/\n/g, '<br>')}</div>`;
+            
+            question.o.forEach((option, index) => {
+                html += `<div class="option" onclick="selectOption(${index})" data-index="${index}">${option}</div>`;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function selectOption(index) {
+            document.querySelectorAll('.option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            const selected = document.querySelector(`.option[data-index="${index}"]`);
+            selected.classList.add('selected');
+            selectedAnswer = index;
+        }
+
+        function submitAnswer() {
+            if (selectedAnswer === null) {
+                alert(texts[selectedLanguage].selectOption);
+                return;
+            }
+            
+            const question = currentQuestions[currentQuestionIndex];
+            const isCorrect = selectedAnswer === question.a;
+            
+            document.querySelectorAll('.option').forEach((opt, idx) => {
+                opt.style.pointerEvents = 'none';
+                if (idx === question.a) {
+                    opt.classList.add('correct');
+                } else if (idx === selectedAnswer && !isCorrect) {
+                    opt.classList.add('incorrect');
+                }
+            });
+            
+            document.getElementById('submitBtn').style.display = 'none';
+            
+            const resultMsg = document.getElementById('resultMessage');
+            resultMsg.classList.remove('hidden');
+            
+            if (isCorrect) {
+                correctAnswers++;
+                resultMsg.className = 'result-message success';
+                resultMsg.textContent = texts[selectedLanguage].correct;
+                
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    
+                    if (currentQuestionIndex < 5) {
+                        displayQuestion();
+                    } else {
+                        if (correctAnswers === 5) {
+                            showCompletion();
+                        } else {
+                            showRetry();
+                        }
+                    }
+                }, 1500);
+            } else {
+                resultMsg.className = 'result-message error';
+                resultMsg.textContent = texts[selectedLanguage].incorrect;
+                
+                setTimeout(() => {
+                    showRetry();
+                }, 1500);
+            }
+        }
+
+        function showRetry() {
+            const container = document.getElementById('quizContainer');
+            container.innerHTML = `
+                <div class="result-message error">
+                    <p>${texts[selectedLanguage].retryTitle}</p>
+                    <p>${texts[selectedLanguage].retryScore}: ${correctAnswers} / 5</p>
+                    <p>${texts[selectedLanguage].retryMessage}</p>
+                </div>
+            `;
+            
+            document.getElementById('submitBtn').style.display = 'none';
+            document.getElementById('resultMessage').classList.add('hidden');
+            
+            setTimeout(() => {
+                startQuiz();
+            }, 3000);
+        }
+
+        function showCompletion() {
+            document.getElementById('quizPage').classList.add('hidden');
+            document.getElementById('completionPage').classList.remove('hidden');
+            document.getElementById('completionTitle').textContent = texts[selectedLanguage].completion;
+            
+            // 完了画面の「最初に戻る」ボタンのテキストを設定
+            document.querySelector('#completionPage .btn').textContent = texts[selectedLanguage].backToStart;
+        }
+    </script>
+</body>
+</html>
